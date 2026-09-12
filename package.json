@@ -1,0 +1,12 @@
+{
+  "name": "tongid-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Source repository for TongID Agent skills",
+  "scripts": {
+    "test": "node --test skills/tongid-issues/scripts/tongid-issues.test.mjs skills/tongid-issues/skill-contract.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

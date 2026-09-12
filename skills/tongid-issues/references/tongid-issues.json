@@ -1,0 +1,659 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TongId Issues REST API",
+    "version": "1.0.0",
+    "description": "One application-scoped Issue API for SDK services, workspace managers, signed-in application users, and guests. The authorization lane controls the allowed operation; it does not change the URL or response shape."
+  },
+  "servers": [
+    {
+      "url": "{baseUrl}/api/v1",
+      "variables": {
+        "baseUrl": {
+          "default": "https://tongid.example.com",
+          "description": "TongId site origin"
+        }
+      }
+    }
+  ],
+  "security": [
+    { "TongIdSecretKey": [] },
+    { "TongIdBearer": [], "TongIdApplicationId": [] }
+  ],
+  "paths": {
+    "/issues": {
+      "get": {
+        "operationId": "listIssues",
+        "summary": "List application Issues",
+        "description": "Management-only operation. A service Secret Key is compatible for SDK/backend calls; a Bearer caller must be a manager in the target application's workspace.",
+        "security": [
+          { "TongIdSecretKey": [] },
+          { "TongIdBearer": [], "TongIdApplicationId": [] }
+        ],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/CategoryIdQuery" },
+          { "$ref": "#/components/parameters/TagIdQuery" },
+          { "$ref": "#/components/parameters/Source" },
+          { "$ref": "#/components/parameters/Lane" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated Issue list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueListEnvelope"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "400": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "post": {
+        "operationId": "createIssue",
+        "summary": "Create an Issue",
+        "description": "The shared create endpoint. Service Secret Key and workspace-manager Bearer callers may create; a signed-in application user may create with Bearer + application ID; a guest may create with application ID + stable guestId. New Issues always start in pending. Callers cannot set application identity or lane.",
+        "security": [
+          { "TongIdSecretKey": [] },
+          { "TongIdBearer": [], "TongIdApplicationId": [] },
+          { "TongIdApplicationId": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/IssueCreateInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created Issue",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IssueEnvelope" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/issues/{id}": {
+      "get": {
+        "operationId": "getIssue",
+        "summary": "Get Issue detail and internal replies",
+        "parameters": [{ "$ref": "#/components/parameters/IssueId" }],
+        "responses": {
+          "200": {
+            "description": "Issue detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IssueDetailEnvelope" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "operationId": "moveIssue",
+        "summary": "Change Issue status",
+        "parameters": [{ "$ref": "#/components/parameters/IssueId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["lane"],
+                "properties": {
+                  "lane": { "$ref": "#/components/schemas/IssueLane" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated Issue",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IssueEnvelope" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/issues/{id}/replies": {
+      "post": {
+        "operationId": "createIssueReply",
+        "summary": "Create an internal Issue reply",
+        "description": "This stores a TongId internal reply only. It does not notify an external reporter.",
+        "parameters": [{ "$ref": "#/components/parameters/IssueId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/IssueReplyCreateInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created reply",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IssueReplyEnvelope" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/issues/stats": {
+      "get": {
+        "operationId": "getIssueStats",
+        "summary": "Get Issue aggregates for analysis",
+        "responses": {
+          "200": {
+            "description": "Issue totals by lane, category, and source",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IssueStatsEnvelope" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/issues/categories": {
+      "get": {
+        "operationId": "listIssueCategories",
+        "summary": "List Issue categories",
+        "responses": {
+          "200": {
+            "description": "Categories with reference counts",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryListEnvelope" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createIssueCategory",
+        "summary": "Create an Issue category",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NameInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryEnvelope" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/issues/categories/{id}": {
+      "patch": {
+        "operationId": "renameIssueCategory",
+        "summary": "Rename an Issue category",
+        "parameters": [{ "$ref": "#/components/parameters/CategoryIdPath" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NameInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Renamed category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryEnvelope" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteIssueCategory",
+        "summary": "Delete an unused Issue category",
+        "parameters": [{ "$ref": "#/components/parameters/CategoryIdPath" }],
+        "responses": {
+          "200": {
+            "description": "Deleted category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeleteEnvelope" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/issues/tags": {
+      "get": {
+        "operationId": "listIssueTags",
+        "summary": "List Issue tags",
+        "responses": {
+          "200": {
+            "description": "Tags with reference counts",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TagListEnvelope" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createIssueTag",
+        "summary": "Create an Issue tag",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NameInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created tag",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TagEnvelope" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/issues/tags/{id}": {
+      "patch": {
+        "operationId": "renameIssueTag",
+        "summary": "Rename an Issue tag",
+        "parameters": [{ "$ref": "#/components/parameters/TagIdPath" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NameInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Renamed tag",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TagEnvelope" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteIssueTag",
+        "summary": "Delete an unused Issue tag",
+        "parameters": [{ "$ref": "#/components/parameters/TagIdPath" }],
+        "responses": {
+          "200": {
+            "description": "Deleted tag",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeleteEnvelope" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/issues/board-settings": {
+      "get": {
+        "operationId": "getIssueBoardSettings",
+        "summary": "Get public Issue board settings",
+        "responses": {
+          "200": {
+            "description": "Board visibility settings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BoardSettingsEnvelope" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "patch": {
+        "operationId": "updateIssueBoardSettings",
+        "summary": "Update one or more public Issue board settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BoardSettingsUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated board visibility settings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BoardSettingsEnvelope" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "TongIdSecretKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-tongid-secret-key",
+        "description": "Backend service credential. It remains supported for SDK/server-to-server callers and must not be exposed to an Agent or browser extension."
+      },
+      "TongIdBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "TongID session",
+        "description": "TongID user session. Management requires workspace RBAC; a regular application user may only create an Issue."
+      },
+      "TongIdApplicationId": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-tongid-application-id",
+        "description": "Target active application. Required for Bearer and guest lanes; optional consistency check for Secret Key service calls."
+      }
+    },
+    "parameters": {
+      "IssueId": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+      "CategoryIdPath": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+      "TagIdPath": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+      "Search": { "name": "search", "in": "query", "schema": { "type": "string", "maxLength": 200 } },
+      "CategoryIdQuery": { "name": "categoryId", "in": "query", "schema": { "type": "string" } },
+      "TagIdQuery": { "name": "tagId", "in": "query", "schema": { "type": "string" } },
+      "Source": { "name": "source", "in": "query", "schema": { "type": "string", "maxLength": 100 } },
+      "Lane": { "name": "lane", "in": "query", "schema": { "$ref": "#/components/schemas/IssueLane" } },
+      "Page": { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } },
+      "PageSize": { "name": "pageSize", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 } }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid authorization credential",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } }
+      },
+      "Forbidden": {
+        "description": "Authenticated identity is not allowed to perform this Issue operation",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } }
+      },
+      "ValidationError": {
+        "description": "Invalid JSON or parameters",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } }
+      },
+      "NotFound": {
+        "description": "The scoped resource does not exist",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } }
+      },
+      "Conflict": {
+        "description": "Name conflict or resource still in use",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } }
+      }
+    },
+    "schemas": {
+      "IssueLane": {
+        "type": "string",
+        "enum": ["pending", "in_progress", "review", "done", "closed"]
+      },
+      "IssueCreateInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "content", "source"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "content": { "type": "string", "minLength": 1, "maxLength": 10000 },
+          "source": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "userName": { "type": "string", "minLength": 1, "maxLength": 80, "description": "Accepted only for service or manager callers; application-user display name is resolved by TongID." },
+          "contactEmail": { "type": "string", "format": "email", "maxLength": 254 },
+          "guestId": { "type": "string", "pattern": "^g_[a-z0-9]+_[0-9]+$", "maxLength": 128, "description": "Required only for an unauthenticated guest create. Must be omitted when Authorization: Bearer is sent." },
+          "categoryId": { "type": "string", "minLength": 1 },
+          "tagIds": { "type": "array", "maxItems": 20, "uniqueItems": true, "items": { "type": "string", "minLength": 1 }, "default": [] }
+        }
+      },
+      "IssueReplyCreateInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["content"],
+        "properties": {
+          "content": { "type": "string", "minLength": 1, "maxLength": 10000 },
+          "authorName": { "type": "string", "minLength": 1, "maxLength": 80 }
+        }
+      },
+      "NameInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 80 }
+        }
+      },
+      "Issue": {
+        "type": "object",
+        "required": ["id", "title", "content", "source", "category", "lane", "laneOrder", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "source": { "type": "string" },
+          "userName": { "type": ["string", "null"] },
+          "lane": { "$ref": "#/components/schemas/IssueLane" },
+          "laneOrder": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "category": { "$ref": "#/components/schemas/Category" },
+          "tags": { "type": "array", "items": { "$ref": "#/components/schemas/Tag" } }
+        }
+      },
+      "IssueDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Issue" },
+          {
+            "type": "object",
+            "required": ["replies"],
+            "properties": {
+              "replies": { "type": "array", "items": { "$ref": "#/components/schemas/IssueReply" } }
+            }
+          }
+        ]
+      },
+      "IssueTagAssignment": {
+        "type": "object",
+        "required": ["issueId", "tagId", "tag"],
+        "properties": {
+          "issueId": { "type": "string" },
+          "tagId": { "type": "string" },
+          "tag": { "$ref": "#/components/schemas/Tag" }
+        }
+      },
+      "IssueReply": {
+        "type": "object",
+        "required": ["id", "issueId", "content", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string" },
+          "issueId": { "type": "string" },
+          "content": { "type": "string" },
+          "authorName": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "required": ["id", "name", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "issueCount": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "Tag": {
+        "type": "object",
+        "required": ["id", "name", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "issueCount": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "BoardSettings": {
+        "type": "object",
+        "required": ["enabled", "showPendingLane", "showInProgressLane", "showReviewLane", "showDoneLane", "showClosedLane", "showTitle", "showContent", "showCategory", "showTags", "showSource", "showUserName", "showCreatedAt", "showUpdatedAt"],
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "showPendingLane": { "type": "boolean" },
+          "showInProgressLane": { "type": "boolean" },
+          "showReviewLane": { "type": "boolean" },
+          "showDoneLane": { "type": "boolean" },
+          "showClosedLane": { "type": "boolean" },
+          "showTitle": { "type": "boolean" },
+          "showContent": { "type": "boolean" },
+          "showCategory": { "type": "boolean" },
+          "showTags": { "type": "boolean" },
+          "showSource": { "type": "boolean" },
+          "showUserName": { "type": "boolean" },
+          "showCreatedAt": { "type": "boolean" },
+          "showUpdatedAt": { "type": "boolean" }
+        }
+      },
+      "BoardSettingsUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "showPendingLane": { "type": "boolean" },
+          "showInProgressLane": { "type": "boolean" },
+          "showReviewLane": { "type": "boolean" },
+          "showDoneLane": { "type": "boolean" },
+          "showClosedLane": { "type": "boolean" },
+          "showTitle": { "type": "boolean" },
+          "showContent": { "type": "boolean" },
+          "showCategory": { "type": "boolean" },
+          "showTags": { "type": "boolean" },
+          "showSource": { "type": "boolean" },
+          "showUserName": { "type": "boolean" },
+          "showCreatedAt": { "type": "boolean" },
+          "showUpdatedAt": { "type": "boolean" }
+        }
+      },
+      "IssueStats": {
+        "type": "object",
+        "required": ["total", "byLane", "byCategory", "bySource"],
+        "properties": {
+          "total": { "type": "integer", "minimum": 0 },
+          "byLane": { "type": "array", "items": { "type": "object", "required": ["id", "label", "count"], "properties": { "id": { "$ref": "#/components/schemas/IssueLane" }, "label": { "type": "string" }, "count": { "type": "integer", "minimum": 0 } } } },
+          "byCategory": { "type": "array", "items": { "type": "object", "required": ["id", "name", "count"], "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "count": { "type": "integer", "minimum": 0 } } } },
+          "bySource": { "type": "array", "items": { "type": "object", "required": ["source", "count"], "properties": { "source": { "type": "string" }, "count": { "type": "integer", "minimum": 0 } } } }
+        }
+      },
+      "IssueEnvelope": {
+        "type": "object",
+        "required": ["data", "status", "error"],
+        "properties": { "data": { "type": "object", "required": ["issue"], "properties": { "issue": { "$ref": "#/components/schemas/Issue" } } }, "status": { "type": "integer" }, "error": { "type": "null" } }
+      },
+      "IssueDetailEnvelope": {
+        "type": "object",
+        "required": ["data", "status", "error"],
+        "properties": { "data": { "type": "object", "required": ["issue"], "properties": { "issue": { "$ref": "#/components/schemas/IssueDetail" } } }, "status": { "type": "integer" }, "error": { "type": "null" } }
+      },
+      "IssueReplyEnvelope": {
+        "type": "object",
+        "required": ["data", "status", "error"],
+        "properties": { "data": { "type": "object", "required": ["reply"], "properties": { "reply": { "$ref": "#/components/schemas/IssueReply" } } }, "status": { "type": "integer" }, "error": { "type": "null" } }
+      },
+      "IssueListEnvelope": {
+        "type": "object",
+        "required": ["data", "status", "error"],
+        "properties": { "data": { "type": "object", "required": ["issues", "pagination"], "properties": { "issues": { "type": "array", "items": { "$ref": "#/components/schemas/Issue" } }, "pagination": { "type": "object", "required": ["page", "pageSize", "total", "totalPages"], "properties": { "page": { "type": "integer" }, "pageSize": { "type": "integer" }, "total": { "type": "integer" }, "totalPages": { "type": "integer" } } } } }, "status": { "type": "integer" }, "error": { "type": "null" } }
+      },
+      "CategoryEnvelope": { "type": "object", "properties": { "data": { "type": "object", "properties": { "category": { "$ref": "#/components/schemas/Category" } } }, "status": { "type": "integer" }, "error": { "type": "null" } } },
+      "TagEnvelope": { "type": "object", "properties": { "data": { "type": "object", "properties": { "tag": { "$ref": "#/components/schemas/Tag" } } }, "status": { "type": "integer" }, "error": { "type": "null" } } },
+      "CategoryListEnvelope": { "type": "object", "properties": { "data": { "type": "object", "properties": { "categories": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } } } }, "status": { "type": "integer" }, "error": { "type": "null" } } },
+      "TagListEnvelope": { "type": "object", "properties": { "data": { "type": "object", "properties": { "tags": { "type": "array", "items": { "$ref": "#/components/schemas/Tag" } } } }, "status": { "type": "integer" }, "error": { "type": "null" } } },
+      "BoardSettingsEnvelope": { "type": "object", "properties": { "data": { "type": "object", "properties": { "settings": { "$ref": "#/components/schemas/BoardSettings" } } }, "status": { "type": "integer" }, "error": { "type": "null" } } },
+      "IssueStatsEnvelope": { "type": "object", "properties": { "data": { "type": "object", "properties": { "stats": { "$ref": "#/components/schemas/IssueStats" } } }, "status": { "type": "integer" }, "error": { "type": "null" } } },
+      "DeleteEnvelope": { "type": "object", "properties": { "data": { "type": "object", "properties": { "deleted": { "type": "boolean", "const": true } } }, "status": { "type": "integer" }, "error": { "type": "null" } } },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": ["data", "status", "error"],
+        "properties": {
+          "data": { "type": "null" },
+          "status": { "type": "integer" },
+          "error": { "type": "object", "required": ["code", "message"], "properties": { "code": { "type": "string" }, "message": { "type": "string" } } }
+        }
+      }
+    }
+  }
+}
