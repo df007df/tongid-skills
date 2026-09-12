@@ -1,10 +1,12 @@
 # TongID Skills
 
-让 Agent 帮团队处理 TongID 里的 Issue。
+TongID 帮你收集用户在软件使用中反馈的问题，并通过管理看板持续跟进。你还可以发布公开看板，让访客看到哪些事项正在处理、已经完成或已关闭，更容易了解产品的最新动向。
+
+这个仓库提供 Agent 技能，让 Agent 也能参与这套问题处理流程。
 
 ![TongID Agent 技能](assets/agent-skills-overview.png)
 
-## 当前技能
+## Agent 技能
 
 ### [tongid-issues](./skills/tongid-issues/)
 
