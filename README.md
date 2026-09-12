@@ -1,41 +1,36 @@
 # TongID Skills
 
-TongID Agent 技能包的独立源仓库。这里的 `main` 分支和发布 tag 是唯一可编辑的原始内容；用户本机安装到 `~/.codex/skills/` 的副本，以及 TongID 网站上的 Agent 页面，都是分发或索引入口，不在其中维护正文。
+让 Agent 帮团队处理 TongID 里的 Issue。
 
-GitHub：<https://github.com/df007df/tongid-skills>
+![TongID Agent 技能](assets/agent-skills-overview.png)
 
-## 目录
+## 当前技能
 
-```text
-skills/
-  tongid-issues/
-    SKILL.md                         # Agent 行为边界与操作流程
-    references/tongid-issues.json    # 与 TongID /api/v1 对应的 OpenAPI 契约
-    scripts/tongid-issues.mjs        # 可重复使用的本机 HTTP helper
-    *.test.mjs                       # helper 与契约测试
-```
+### [tongid-issues](./skills/tongid-issues/)
 
-一个业务能力对应一个独立技能目录。后续如新增用户、订单能力，应新增 `tongid-users`、`tongid-orders`，不要把全部说明堆进 `tongid-issues`。
+把日常 Issue 处理交给 Agent。它可以：
 
-## 维护规则
+- 查询和筛选 Issue
+- 汇总问题趋势，找出需要优先处理的事项
+- 创建新的 Issue
+- 回复处理进度
+- 更新处理状态
+- 维护分类和标签
 
-1. 先改 TongID 的 HTTP API 与服务端测试，再在此仓库更新对应技能的 `SKILL.md`、OpenAPI 契约、helper 和测试。
-2. `SKILL.md` 只写会改变 Agent 决策的流程、权限边界与安全约束；完整字段定义只维护在 `references/`。
-3. 不提交任何真实 Secret Key、Bearer token、本机 session 或 `.env` 文件。技能只能说明读取哪些环境变量。
-4. 每次准备发布前运行 `npm test`；有可用的本地 TongID 环境时，再完整走一次登录、查询和一条可安全清理的写入冒烟。
-5. API 不兼容变更时提升主版本；兼容新增时提升次版本。推荐 tag：`tongid-issues-v0.1.0`。
+适合直接交代给 Agent 的任务，例如：
 
-当前 `tongid-issues` 保留了迁入时的 Bearer 本机登录流程。若改为 Secret Key 直连，应单独完成鉴权设计和回归，不在普通文案更新中混改；应使用仅限 Issue 操作的 scoped key，而不是复用工作空间级凭据。
+> 汇总最近一周待处理的问题，按来源和分类告诉我优先级。
 
-## 发布与安装
+> 为这个反馈创建 Issue，并标记为“处理中”。
 
-推送到 GitHub 后，TongID 的 `/agents` 页面只展示此仓库、已验证的安装命令和最新 tag。安装者不应直接编辑本机已安装副本；需要改动时在这里提交、测试、打 tag，再升级安装。
+> 回复这条 Issue：已修复，等待验收。
 
-在配置 GitHub remote 前，先完成本地首个提交：
+## 它能帮你做什么
 
-```bash
-cd /Users/df007df/work/product/lingoway/code/tongid-skills
-npm test
-git add .
-git commit -m "feat: initialize tongid issues skill"
-```
+查询、创建和分析问题：
+
+![查询、创建和分析 Issue](assets/agent-issue-discovery.png)
+
+跟进处理进度，并整理分类与标签：
+
+![回复、流转和整理 Issue](assets/agent-issue-workflow.png)
