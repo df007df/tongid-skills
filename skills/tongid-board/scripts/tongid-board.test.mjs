@@ -6,7 +6,7 @@ import {
   buildIssueHeaders,
   parseAgentCallback,
   waitForAgentCallback,
-} from './tongid-issues.mjs';
+} from './tongid-board.mjs';
 
 test('builds a fixed Agent authorization callback URL', () => {
   const url = buildAgentAuthorizeUrl('https://tongid.example.com/', 'state_1', 'challenge_1');
@@ -21,7 +21,7 @@ test('builds a fixed Agent authorization callback URL', () => {
   assert.equal(url.searchParams.get('code_challenge'), 'challenge_1');
 });
 
-test('builds Issue requests with a Bearer token and target application header', () => {
+test('builds board requests with a Bearer token and target application header', () => {
   assert.deepEqual(buildIssueHeaders('session_1', 'app_1'), {
     accept: 'application/json',
     authorization: 'Bearer session_1',

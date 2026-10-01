@@ -4,7 +4,7 @@
   "private": true,
   "description": "Source repository for TongID Agent skills",
   "scripts": {
-    "test": "node --test skills/tongid-issues/scripts/tongid-issues.test.mjs skills/tongid-issues/skill-contract.test.mjs"
+    "test": "node --test skills/tongid-board/scripts/tongid-board.test.mjs skills/tongid-board/skill-contract.test.mjs"
   },
   "engines": {
     "node": ">=20"

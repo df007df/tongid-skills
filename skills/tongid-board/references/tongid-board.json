@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "TongId Issues REST API",
+    "title": "TongID Board REST API",
     "version": "1.0.0",
-    "description": "One application-scoped Issue API for SDK services, workspace managers, signed-in application users, and guests. The authorization lane controls the allowed operation; it does not change the URL or response shape."
+    "description": "One application-scoped board API for SDK services, workspace managers, signed-in application users, and guests. The authorization lane controls the allowed operation; it does not change the URL or response shape."
   },
   "servers": [
     {
@@ -24,7 +24,7 @@
     "/issues": {
       "get": {
         "operationId": "listIssues",
-        "summary": "List application Issues",
+        "summary": "List application board tasks",
         "description": "Management-only operation. A service Secret Key is compatible for SDK/backend calls; a Bearer caller must be a manager in the target application's workspace.",
         "security": [
           { "TongIdSecretKey": [] },
@@ -41,7 +41,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Paginated Issue list",
+            "description": "Paginated board task list",
             "content": {
               "application/json": {
                 "schema": {
@@ -56,8 +56,8 @@
       },
       "post": {
         "operationId": "createIssue",
-        "summary": "Create an Issue",
-        "description": "The shared create endpoint. Service Secret Key and workspace-manager Bearer callers may create; a signed-in application user may create with Bearer + application ID; a guest may create with application ID + stable guestId. New Issues always start in pending. Callers cannot set application identity or lane.",
+        "summary": "Create a board task",
+        "description": "The shared create endpoint. Service Secret Key and workspace-manager Bearer callers may create; a signed-in application user may create with Bearer + application ID; a guest may create with application ID + stable guestId. New tasks always start in pending. Callers cannot set application identity or lane.",
         "security": [
           { "TongIdSecretKey": [] },
           { "TongIdBearer": [], "TongIdApplicationId": [] },
@@ -73,7 +73,7 @@
         },
         "responses": {
           "201": {
-            "description": "Created Issue",
+            "description": "Created task",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/IssueEnvelope" }
@@ -88,11 +88,11 @@
     "/issues/{id}": {
       "get": {
         "operationId": "getIssue",
-        "summary": "Get Issue detail and internal replies",
+        "summary": "Get task detail and internal replies",
         "parameters": [{ "$ref": "#/components/parameters/IssueId" }],
         "responses": {
           "200": {
-            "description": "Issue detail",
+            "description": "Task detail",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/IssueDetailEnvelope" }
@@ -105,7 +105,7 @@
       },
       "patch": {
         "operationId": "moveIssue",
-        "summary": "Change Issue status",
+        "summary": "Change task status",
         "parameters": [{ "$ref": "#/components/parameters/IssueId" }],
         "requestBody": {
           "required": true,
@@ -124,7 +124,7 @@
         },
         "responses": {
           "200": {
-            "description": "Updated Issue",
+            "description": "Updated task",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/IssueEnvelope" }
@@ -140,7 +140,7 @@
     "/issues/{id}/replies": {
       "post": {
         "operationId": "createIssueReply",
-        "summary": "Create an internal Issue reply",
+        "summary": "Create an internal task reply",
         "description": "This stores a TongId internal reply only. It does not notify an external reporter.",
         "parameters": [{ "$ref": "#/components/parameters/IssueId" }],
         "requestBody": {
@@ -169,10 +169,10 @@
     "/issues/stats": {
       "get": {
         "operationId": "getIssueStats",
-        "summary": "Get Issue aggregates for analysis",
+        "summary": "Get board aggregates for analysis",
         "responses": {
           "200": {
-            "description": "Issue totals by lane, category, and source",
+            "description": "Task totals by lane, category, and source",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/IssueStatsEnvelope" }
@@ -186,7 +186,7 @@
     "/issues/categories": {
       "get": {
         "operationId": "listIssueCategories",
-        "summary": "List Issue categories",
+        "summary": "List board categories",
         "responses": {
           "200": {
             "description": "Categories with reference counts",
@@ -201,7 +201,7 @@
       },
       "post": {
         "operationId": "createIssueCategory",
-        "summary": "Create an Issue category",
+        "summary": "Create a board category",
         "requestBody": {
           "required": true,
           "content": {
@@ -228,7 +228,7 @@
     "/issues/categories/{id}": {
       "patch": {
         "operationId": "renameIssueCategory",
-        "summary": "Rename an Issue category",
+        "summary": "Rename a board category",
         "parameters": [{ "$ref": "#/components/parameters/CategoryIdPath" }],
         "requestBody": {
           "required": true,
@@ -255,7 +255,7 @@
       },
       "delete": {
         "operationId": "deleteIssueCategory",
-        "summary": "Delete an unused Issue category",
+        "summary": "Delete an unused board category",
         "parameters": [{ "$ref": "#/components/parameters/CategoryIdPath" }],
         "responses": {
           "200": {
@@ -275,7 +275,7 @@
     "/issues/tags": {
       "get": {
         "operationId": "listIssueTags",
-        "summary": "List Issue tags",
+        "summary": "List board tags",
         "responses": {
           "200": {
             "description": "Tags with reference counts",
@@ -290,7 +290,7 @@
       },
       "post": {
         "operationId": "createIssueTag",
-        "summary": "Create an Issue tag",
+        "summary": "Create a board tag",
         "requestBody": {
           "required": true,
           "content": {
@@ -317,7 +317,7 @@
     "/issues/tags/{id}": {
       "patch": {
         "operationId": "renameIssueTag",
-        "summary": "Rename an Issue tag",
+        "summary": "Rename a board tag",
         "parameters": [{ "$ref": "#/components/parameters/TagIdPath" }],
         "requestBody": {
           "required": true,
@@ -344,7 +344,7 @@
       },
       "delete": {
         "operationId": "deleteIssueTag",
-        "summary": "Delete an unused Issue tag",
+        "summary": "Delete an unused board tag",
         "parameters": [{ "$ref": "#/components/parameters/TagIdPath" }],
         "responses": {
           "200": {
@@ -364,7 +364,7 @@
     "/issues/board-settings": {
       "get": {
         "operationId": "getIssueBoardSettings",
-        "summary": "Get public Issue board settings",
+        "summary": "Get public board settings",
         "responses": {
           "200": {
             "description": "Board visibility settings",
@@ -379,7 +379,7 @@
       },
       "patch": {
         "operationId": "updateIssueBoardSettings",
-        "summary": "Update one or more public Issue board settings",
+        "summary": "Update one or more public board settings",
         "requestBody": {
           "required": true,
           "content": {
@@ -415,7 +415,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "TongID session",
-        "description": "TongID user session. Management requires workspace RBAC; a regular application user may only create an Issue."
+        "description": "TongID user session. Management requires workspace RBAC; a regular application user may only create a task."
       },
       "TongIdApplicationId": {
         "type": "apiKey",
@@ -442,7 +442,7 @@
         "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } }
       },
       "Forbidden": {
-        "description": "Authenticated identity is not allowed to perform this Issue operation",
+        "description": "Authenticated identity is not allowed to perform this board operation",
         "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } } }
       },
       "ValidationError": {

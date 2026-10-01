@@ -39,7 +39,7 @@ export function buildAgentAuthorizeUrl(baseUrl, state, codeChallenge) {
 
 export function buildIssueHeaders(token, applicationId) {
   if (!token) fail('本机登录态缺失，请先执行 login');
-  if (!applicationId) fail('Issue 操作需要设置 TONGID_APPLICATION_ID');
+  if (!applicationId) fail('看板操作需要设置 TONGID_APPLICATION_ID');
   return {
     accept: 'application/json',
     authorization: `Bearer ${token}`,
@@ -84,7 +84,7 @@ function createState() {
 }
 
 function sessionDirectory(homeDir = os.homedir()) {
-  return path.join(homeDir, '.tongid', 'tongid-issues');
+  return path.join(homeDir, '.tongid', 'tongid-board');
 }
 
 export function localSessionFile(homeDir = os.homedir()) {
@@ -254,19 +254,19 @@ async function login() {
 function printHelp() {
   console.log([
     'Usage:',
-    '  node scripts/tongid-issues.mjs login',
-    '  node scripts/tongid-issues.mjs logout',
-    '  node scripts/tongid-issues.mjs list [--search TEXT] [--lane LANE] [--category-id ID] [--tag-id ID] [--source SOURCE] [--page N] [--page-size N]',
-    '  node scripts/tongid-issues.mjs get ISSUE_ID',
-    '  node scripts/tongid-issues.mjs stats',
-    '  node scripts/tongid-issues.mjs create --title TEXT --content TEXT --source TEXT [--category-id ID] [--tags ID,ID] [--user-name NAME]',
-    '  node scripts/tongid-issues.mjs reply ISSUE_ID --content TEXT [--author-name NAME]',
-    '  node scripts/tongid-issues.mjs move ISSUE_ID --lane pending|in_progress|review|done|closed',
-    '  node scripts/tongid-issues.mjs categories list|create|rename|delete ...',
-    '  node scripts/tongid-issues.mjs tags list|create|rename|delete ...',
-    '  node scripts/tongid-issues.mjs board get|update [--enabled true] [--show-content false]',
+    '  node scripts/tongid-board.mjs login',
+    '  node scripts/tongid-board.mjs logout',
+    '  node scripts/tongid-board.mjs list [--search TEXT] [--lane LANE] [--category-id ID] [--tag-id ID] [--source SOURCE] [--page N] [--page-size N]',
+    '  node scripts/tongid-board.mjs get ISSUE_ID',
+    '  node scripts/tongid-board.mjs stats',
+    '  node scripts/tongid-board.mjs create --title TEXT --content TEXT --source TEXT [--category-id ID] [--tags ID,ID] [--user-name NAME]',
+    '  node scripts/tongid-board.mjs reply ISSUE_ID --content TEXT [--author-name NAME]',
+    '  node scripts/tongid-board.mjs move ISSUE_ID --lane pending|in_progress|review|done|closed',
+    '  node scripts/tongid-board.mjs categories list|create|rename|delete ...',
+    '  node scripts/tongid-board.mjs tags list|create|rename|delete ...',
+    '  node scripts/tongid-board.mjs board get|update [--enabled true] [--show-content false]',
     '',
-    'login 只需要 TONGID_BASE_URL；Issue 操作还需要 TONGID_APPLICATION_ID。',
+    'login 只需要 TONGID_BASE_URL；看板操作还需要 TONGID_APPLICATION_ID。',
   ].join('\n'));
 }
 
@@ -408,7 +408,7 @@ async function main() {
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   main().catch((error) => {
-    console.error(`tongid-issues: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`tongid-board: ${error instanceof Error ? error.message : String(error)}`);
     process.exitCode = 1;
   });
 }
