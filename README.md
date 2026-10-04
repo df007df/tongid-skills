@@ -1,6 +1,16 @@
 # TongID Skills
 
-TongID 平台的 Agent 技能目录。每个技能对应 TongID 的一项业务能力，让 Agent 在你的许可下读取信息、完成维护工作，或协助团队推进日常运营。
+TongID 官方 Agent 技能仓库，采用**单技能格式**：`SKILL.md` 位于仓库根目录，是整个技能的唯一入口。平台能力不做「一项功能对应一个技能」的拆分——看板，以及后续的用户、商品、权益等所有 TongID 平台功能，都并入这一个技能包，由入口 `SKILL.md` 统一组织 Agent 工作流，配套 `scripts/` 与 `references/` 随能力一起扩充。
+
+## 仓库格式
+
+| 路径 | 作用 |
+| --- | --- |
+| `SKILL.md` | 技能唯一入口：Agent 的工作流、使用边界与命令说明；后续平台能力持续并入此文件 |
+| `scripts/` | 命令行 helper（本地登录、API 调用），按能力扩充 |
+| `references/` | 平台 REST API 契约（OpenAPI 片段） |
+
+安装方会校验 `SKILL.md` 必须位于仓库根目录；集合式仓库（如 `skills/<name>/SKILL.md`）不符合本格式。
 
 ## TongID 平台
 
@@ -19,17 +29,18 @@ TongID 为 Web 应用、SaaS 和浏览器扩展提供统一的账户、交易、
 
 ![TongID Agent 技能](assets/agent-skills-overview.png)
 
-## 已发布技能
+## 能力接入
 
-技能不是另一套平台功能，而是让 Agent 调用 TongID 已有能力的操作说明与工作流程。当前已开放：
+技能不是另一套平台功能，而是让 Agent 调用 TongID 已有能力的操作说明与工作流程。所有平台能力共用根目录 `SKILL.md` 这一个入口，按下表逐步并入：
 
-| 对应平台功能 | 技能 | Agent 可协助的工作 |
+| 平台能力 | 状态 | Agent 可协助的工作 |
 | --- | --- | --- |
-| 看板 | [`tongid-board`](./) | 查询、分析、创建和维护看板任务；跟进处理状态；维护分类与标签；读取和调整公开看板设置。 |
+| 看板 | 已接入 | 查询、分析、创建和维护看板任务；跟进处理状态；维护分类与标签；读取和调整公开看板设置。 |
+| 其余平台能力 | 规划中 | 统一身份与登录、应用与团队、商品订阅与收款、权益与权限、用户与运营、候补订阅与产品更新等，将陆续并入本技能的入口与配套脚本，不拆分独立技能或独立仓库。 |
 
-### `tongid-board`：看板维护
+### 当前能力：看板维护（tongid-board）
 
-这个技能对应 TongID 的看板功能。它让 Agent 参与从“收到问题”到“用户看见进展”的完整闭环：
+看板是本技能已并入的第一项平台能力，覆盖从“收到问题”到“用户看见进展”的完整闭环：
 
 - **收集与检索**：按状态、关键词、来源、分类和标签查看已有任务；也可为新的反馈创建任务。
 - **问题分析**：汇总各状态、分类和来源的数据，帮助团队发现集中出现的问题并判断处理优先级。
@@ -51,20 +62,16 @@ TongID 为 Web 应用、SaaS 和浏览器扩展提供统一的账户、交易、
 
 ## 安装
 
-将 `tongid-board` 安装到本机，供所有项目中的 Codex 使用：
+将本技能安装到本机，供所有项目中的 Codex 使用：
 
 ```bash
-npx skills add df007df/tongid-skills --skill tongid-board --full-depth -g -y
+npx skills add df007df/tongid-skills --full-depth -g -y
 ```
 
 如果只希望当前项目使用，去掉 `-g`：
 
 ```bash
-npx skills add df007df/tongid-skills --skill tongid-board --full-depth -y
+npx skills add df007df/tongid-skills --full-depth -y
 ```
 
 安装完成后，在下一轮 Codex 对话中即可使用。
-
-## 后续技能
-
-TongID 的其他平台能力会陆续提供独立技能，例如身份与用户、商品与订阅、权益与权限、候补订阅与产品更新、工作空间与运营通知等。每项技能都会单独说明对应的产品功能、Agent 可执行的范围和安装方式。
