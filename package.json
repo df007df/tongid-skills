@@ -2,9 +2,9 @@
   "name": "tongid-skills",
   "version": "0.1.0",
   "private": true,
-  "description": "TongID Agent skill: tongid-board（单技能仓库，SKILL.md 位于根目录）",
+  "description": "TongID Agent skill: tongid-skills（单技能仓库，SKILL.md 位于根目录）",
   "scripts": {
-    "test": "node --test scripts/tongid-board.test.mjs skill-contract.test.mjs"
+    "test": "node --test scripts/tongid-skills.test.mjs skill-contract.test.mjs"
   },
   "engines": {
     "node": ">=20"

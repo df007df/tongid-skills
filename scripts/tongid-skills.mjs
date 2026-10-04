@@ -84,7 +84,7 @@ function createState() {
 }
 
 function sessionDirectory(homeDir = os.homedir()) {
-  return path.join(homeDir, '.tongid', 'tongid-board');
+  return path.join(homeDir, '.tongid', 'tongid-skills');
 }
 
 export function localSessionFile(homeDir = os.homedir()) {
@@ -254,17 +254,17 @@ async function login() {
 function printHelp() {
   console.log([
     'Usage:',
-    '  node scripts/tongid-board.mjs login',
-    '  node scripts/tongid-board.mjs logout',
-    '  node scripts/tongid-board.mjs list [--search TEXT] [--lane LANE] [--category-id ID] [--tag-id ID] [--source SOURCE] [--page N] [--page-size N]',
-    '  node scripts/tongid-board.mjs get ISSUE_ID',
-    '  node scripts/tongid-board.mjs stats',
-    '  node scripts/tongid-board.mjs create --title TEXT --content TEXT --source TEXT [--category-id ID] [--tags ID,ID] [--user-name NAME]',
-    '  node scripts/tongid-board.mjs reply ISSUE_ID --content TEXT [--author-name NAME]',
-    '  node scripts/tongid-board.mjs move ISSUE_ID --lane pending|in_progress|review|done|closed',
-    '  node scripts/tongid-board.mjs categories list|create|rename|delete ...',
-    '  node scripts/tongid-board.mjs tags list|create|rename|delete ...',
-    '  node scripts/tongid-board.mjs board get|update [--enabled true] [--show-content false]',
+    '  node scripts/tongid-skills.mjs login',
+    '  node scripts/tongid-skills.mjs logout',
+    '  node scripts/tongid-skills.mjs list [--search TEXT] [--lane LANE] [--category-id ID] [--tag-id ID] [--source SOURCE] [--page N] [--page-size N]',
+    '  node scripts/tongid-skills.mjs get ISSUE_ID',
+    '  node scripts/tongid-skills.mjs stats',
+    '  node scripts/tongid-skills.mjs create --title TEXT --content TEXT --source TEXT [--category-id ID] [--tags ID,ID] [--user-name NAME]',
+    '  node scripts/tongid-skills.mjs reply ISSUE_ID --content TEXT [--author-name NAME]',
+    '  node scripts/tongid-skills.mjs move ISSUE_ID --lane pending|in_progress|review|done|closed',
+    '  node scripts/tongid-skills.mjs categories list|create|rename|delete ...',
+    '  node scripts/tongid-skills.mjs tags list|create|rename|delete ...',
+    '  node scripts/tongid-skills.mjs board get|update [--enabled true] [--show-content false]',
     '',
     'login 只需要 TONGID_BASE_URL；看板操作还需要 TONGID_APPLICATION_ID。',
   ].join('\n'));
@@ -408,7 +408,7 @@ async function main() {
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   main().catch((error) => {
-    console.error(`tongid-board: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`tongid-skills: ${error instanceof Error ? error.message : String(error)}`);
     process.exitCode = 1;
   });
 }
