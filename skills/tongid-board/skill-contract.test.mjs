@@ -9,7 +9,7 @@ const skillDir = path.dirname(fileURLToPath(import.meta.url));
 test('documents Agent login instead of asking the Agent for a Secret Key', async () => {
   const skill = await readFile(path.join(skillDir, 'SKILL.md'), 'utf8');
 
-  assert.match(skill, /node scripts\/tongid-skills\.mjs login/);
+  assert.match(skill, /node scripts\/tongid-board\.mjs login/);
   assert.match(skill, /TONGID_APPLICATION_ID/);
   assert.doesNotMatch(skill, /- TONGID_SECRET_KEY/);
   assert.match(skill, /本机 Agent 不使用 Secret Key/);

@@ -6,7 +6,7 @@ import {
   buildIssueHeaders,
   parseAgentCallback,
   waitForAgentCallback,
-} from './tongid-skills.mjs';
+} from './tongid-board.mjs';
 
 test('builds a fixed Agent authorization callback URL', () => {
   const url = buildAgentAuthorizeUrl('https://tongid.example.com/', 'state_1', 'challenge_1');

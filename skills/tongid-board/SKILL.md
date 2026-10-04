@@ -1,26 +1,24 @@
 ---
-name: tongid-skills
+name: tongid-board
 description: Use when an agent needs to inspect or operate the TongID application board (tasks) from a local machine.
 ---
 
-# TongID Skills
+# TongID Board
 
 Use the TongID board REST API directly over HTTPS. This skill is not an MCP server.
-
-This repository is a single skill: this `SKILL.md` is the one entry point for every TongID platform capability. The board (tasks) is the capability included today; later capabilities (users, products, entitlements, and so on) will be added into this same skill instead of separate skills.
 
 ## Local login
 
 The local Agent uses a TongID Bearer session, never an application credential.
 
 1. Set `TONGID_BASE_URL` to the TongID site origin, for example `https://tongid.example.com`.
-2. Run `node scripts/tongid-skills.mjs login` and finish the browser login.
+2. Run `node scripts/tongid-board.mjs login` and finish the browser login.
 3. The helper listens only on `http://127.0.0.1:43173/tongid-agent/callback`; no application redirect-URI whitelist is required. It verifies state and PKCE before exchanging the code.
-4. For board operations, set `TONGID_APPLICATION_ID` to the target application. The local session is saved atomically at `~/.tongid/tongid-skills/session.json` with directory mode `0700` and file mode `0600`.
+4. For board operations, set `TONGID_APPLICATION_ID` to the target application. The local session is saved atomically at `~/.tongid/tongid-board/session.json` with directory mode `0700` and file mode `0600`.
 
 本机 Agent 不使用 Secret Key。`Authorization: Bearer <session-token>` 与 `x-tongid-application-id` 由 helper 自动发送；不要把 token 输出到聊天、源码或日志中。
 
-Run `node scripts/tongid-skills.mjs logout` to remove the local session. If login says port `43173` is occupied, close the process using that port and retry.
+Run `node scripts/tongid-board.mjs logout` to remove the local session. If login says port `43173` is occupied, close the process using that port and retry.
 
 ## Workflow
 
@@ -35,12 +33,12 @@ Run `node scripts/tongid-skills.mjs logout` to remove the local session. If logi
 
 Run from this skill directory:
 
-    node scripts/tongid-skills.mjs login
-    node scripts/tongid-skills.mjs stats
-    node scripts/tongid-skills.mjs list --lane pending --page-size 25
-    node scripts/tongid-skills.mjs create --title "导出失败" --content "点击导出后无响应" --source "lingoway-extension"
-    node scripts/tongid-skills.mjs reply issue_xxx --content "已修复，等待验收" --author-name "研发团队"
-    node scripts/tongid-skills.mjs move issue_xxx --lane review
+    node scripts/tongid-board.mjs login
+    node scripts/tongid-board.mjs stats
+    node scripts/tongid-board.mjs list --lane pending --page-size 25
+    node scripts/tongid-board.mjs create --title "导出失败" --content "点击导出后无响应" --source "lingoway-extension"
+    node scripts/tongid-board.mjs reply issue_xxx --content "已修复，等待验收" --author-name "研发团队"
+    node scripts/tongid-board.mjs move issue_xxx --lane review
 
 Use `--help` for all commands. Read `references/tongid-board.json` for the exact shared API contract.
 
@@ -55,10 +53,10 @@ Use `--help` for all commands. Read `references/tongid-board.json` for the exact
 
 ## Common commands
 
-    node scripts/tongid-skills.mjs login|logout
-    node scripts/tongid-skills.mjs list [--search TEXT] [--lane LANE] [--category-id ID] [--tag-id ID] [--source SOURCE] [--page N] [--page-size N]
-    node scripts/tongid-skills.mjs get ISSUE_ID
-    node scripts/tongid-skills.mjs stats
-    node scripts/tongid-skills.mjs categories list|create|rename|delete ...
-    node scripts/tongid-skills.mjs tags list|create|rename|delete ...
-    node scripts/tongid-skills.mjs board get|update [--enabled true] [--show-content false]
+    node scripts/tongid-board.mjs login|logout
+    node scripts/tongid-board.mjs list [--search TEXT] [--lane LANE] [--category-id ID] [--tag-id ID] [--source SOURCE] [--page N] [--page-size N]
+    node scripts/tongid-board.mjs get ISSUE_ID
+    node scripts/tongid-board.mjs stats
+    node scripts/tongid-board.mjs categories list|create|rename|delete ...
+    node scripts/tongid-board.mjs tags list|create|rename|delete ...
+    node scripts/tongid-board.mjs board get|update [--enabled true] [--show-content false]
