@@ -293,6 +293,17 @@ function openBrowser(url) {
   }
 }
 
+async function postTokenOnce(url, form) {
+  // 单次 15 秒封顶：网络黑洞地址（如被墙的 Cloudflare IP）不会拖过授权码 2 分钟 TTL
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/x-www-form-urlencoded' },
+    body: form,
+    signal: AbortSignal.timeout(15_000),
+  });
+  return { status: response.status, payload: await response.json().catch(() => null) };
+}
+
 async function exchangeAgentCode(baseUrl, { code, state, codeVerifier }) {
   const form = new URLSearchParams({
     grant_type: 'authorization_code',
@@ -301,18 +312,24 @@ async function exchangeAgentCode(baseUrl, { code, state, codeVerifier }) {
     code_verifier: codeVerifier,
     client_type: TONGID_AGENT_CLIENT_TYPE,
   });
-  const response = await fetch(`${baseUrl}/api/v1/oauth/token`, {
-    method: 'POST',
-    headers: { accept: 'application/json', 'content-type': 'application/x-www-form-urlencoded' },
-    body: form,
-  });
-  const payload = await response.json().catch(() => null);
-  const token = payload?.data?.access_token;
-  if (!response.ok || typeof token !== 'string' || !token) {
-    const message = payload?.error?.message ?? `HTTP ${response.status}`;
-    fail(`TongID 登录 token 兑换失败：${message}`);
+  let lastNetworkError = '未知网络错误';
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const { status, payload } = await postTokenOnce(`${baseUrl}/api/v1/oauth/token`, form);
+      const token = payload?.data?.access_token;
+      if (status === 200 && typeof token === 'string' && token) return token;
+      fail(`TongID 登录 token 兑换失败：${payload?.error?.message ?? `HTTP ${status}`}`);
+    } catch (error) {
+      // 服务端已定论的失败直接抛出；仅网络类失败（超时/连接不通）换 DNS 轮询结果重试
+      if (error instanceof Error && error.message.startsWith('TongID 登录 token 兑换失败')) throw error;
+      lastNetworkError = error instanceof Error ? error.message : String(error);
+    }
+    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1_000));
   }
-  return token;
+  fail(
+    `TongID 登录 token 兑换失败：网络连续 3 次未连通（${lastNetworkError}）。` +
+      '请重试 login；反复失败请检查本机网络或代理（本地回调 127.0.0.1 需绕过代理）。',
+  );
 }
 
 /**
