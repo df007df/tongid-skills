@@ -1,6 +1,6 @@
 {
   "name": "tongid-skills",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "TongID Agent 技能集合仓库（skills/ 下每个子目录一个技能，当前含 tongid-board；共享授权模块在 shared/，提交前用 scripts/sync-shared.mjs 同步副本）",
   "scripts": {
