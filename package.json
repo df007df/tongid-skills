@@ -2,9 +2,10 @@
   "name": "tongid-skills",
   "version": "0.1.0",
   "private": true,
-  "description": "TongID Agent 技能集合仓库（skills/ 下每个子目录一个技能，当前含 tongid-board）",
+  "description": "TongID Agent 技能集合仓库（skills/ 下每个子目录一个技能，当前含 tongid-board；共享授权模块在 shared/，提交前用 scripts/sync-shared.mjs 同步副本）",
   "scripts": {
-    "test": "node --test skills/tongid-board/scripts/tongid-board.test.mjs skills/tongid-board/skill-contract.test.mjs"
+    "setup": "git config core.hooksPath .githooks",
+    "test": "node --test shared/tongid-auth.test.mjs scripts/sync-shared.test.mjs skills/tongid-board/scripts/tongid-board.test.mjs skills/tongid-board/skill-contract.test.mjs"
   },
   "engines": {
     "node": ">=20"

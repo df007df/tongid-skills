@@ -6,11 +6,14 @@ import { fileURLToPath } from 'node:url';
 
 const skillDir = path.dirname(fileURLToPath(import.meta.url));
 
-test('documents Agent login instead of asking the Agent for a Secret Key', async () => {
+test('documents the shared auth helper and the explicit application id', async () => {
   const skill = await readFile(path.join(skillDir, 'SKILL.md'), 'utf8');
 
-  assert.match(skill, /node scripts\/tongid-board\.mjs login/);
-  assert.match(skill, /TONGID_APPLICATION_ID/);
+  assert.match(skill, /node scripts\/tongid-auth\.mjs login/);
+  assert.match(skill, /node scripts\/tongid-auth\.mjs whoami/);
+  assert.match(skill, /--application-id/);
+  assert.doesNotMatch(skill, /TONGID_APPLICATION_ID/);
+  assert.doesNotMatch(skill, /TONGID_BASE_URL/);
   assert.doesNotMatch(skill, /- TONGID_SECRET_KEY/);
   assert.match(skill, /本机 Agent 不使用 Secret Key/);
   assert.match(skill, /Authorization: Bearer/);

@@ -1,66 +1,31 @@
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
 import test from 'node:test';
-import {
-  buildAgentAuthorizeUrl,
-  buildIssueHeaders,
-  parseAgentCallback,
-  waitForAgentCallback,
-} from './tongid-board.mjs';
+import { parseFlags, queryString, required } from './tongid-board.mjs';
 
-test('builds a fixed Agent authorization callback URL', () => {
-  const url = buildAgentAuthorizeUrl('https://tongid.example.com/', 'state_1', 'challenge_1');
+test('parseFlags 支持旗标与位置参数混排（--application-id 可放任意位置）', () => {
+  assert.deepEqual(
+    parseFlags(['--application-id', 'app_1', 'stats']),
+    { flags: { 'application-id': 'app_1' }, positional: ['stats'] },
+  );
+  assert.deepEqual(
+    parseFlags(['get', 'issue_1', '--application-id=app_2']),
+    { flags: { 'application-id': 'app_2' }, positional: ['get', 'issue_1'] },
+  );
+});
 
-  assert.equal(url.origin, 'https://tongid.example.com');
-  assert.equal(url.pathname, '/auth/login');
+test('parseFlags 拒绝缺少取值的旗标', () => {
+  assert.throws(() => parseFlags(['--application-id', '--lane']), /缺少 --application-id 的值/);
+});
+
+test('业务命令必须显式传 --application-id', () => {
+  assert.throws(() => required({}, 'application-id'), /--application-id/);
+  assert.equal(required({ 'application-id': 'app_1' }, 'application-id'), 'app_1');
+});
+
+test('queryString 将已知旗标转成驼峰查询参数', () => {
   assert.equal(
-    url.searchParams.get('redirect'),
-    'http://127.0.0.1:43173/tongid-agent/callback',
+    queryString({ 'page-size': '25', lane: 'pending' }, ['lane', 'page-size']),
+    '?lane=pending&pageSize=25',
   );
-  assert.equal(url.searchParams.get('state'), 'state_1');
-  assert.equal(url.searchParams.get('code_challenge'), 'challenge_1');
-});
-
-test('builds board requests with a Bearer token and target application header', () => {
-  assert.deepEqual(buildIssueHeaders('session_1', 'app_1'), {
-    accept: 'application/json',
-    authorization: 'Bearer session_1',
-    'x-tongid-application-id': 'app_1',
-  });
-});
-
-test('rejects a callback that does not use the exact loopback host and path', () => {
-  assert.throws(
-    () => parseAgentCallback('http://localhost:43173/tongid-agent/callback?code=x&state=state_1', 'state_1'),
-    /固定回调地址/,
-  );
-  assert.throws(
-    () => parseAgentCallback('http://127.0.0.1:43173/tongid-agent/callback?code=x&state=wrong', 'state_1'),
-    /state/,
-  );
-});
-
-test('explains when the fixed local callback port is already occupied', async (t) => {
-  const blocker = createServer();
-  try {
-    await new Promise((resolve, reject) => {
-      blocker.once('error', reject);
-      blocker.listen(43173, '127.0.0.1', resolve);
-    });
-  } catch (error) {
-    if (error && typeof error === 'object' && error.code === 'EADDRINUSE') {
-      t.skip('测试环境已占用固定 Agent 回调端口');
-      return;
-    }
-    throw error;
-  }
-
-  try {
-    await assert.rejects(
-      waitForAgentCallback({ state: 'state_1', timeoutMs: 100 }),
-      /端口 43173 已被占用/,
-    );
-  } finally {
-    await new Promise((resolve) => blocker.close(resolve));
-  }
+  assert.equal(queryString({}, ['lane']), '');
 });

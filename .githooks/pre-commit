@@ -1,0 +1,13 @@
+#!/bin/sh
+# 提交前自动同步 shared/ 共享模块到各技能副本；若有漂移，同步后把副本加入本次提交。
+# 启用方式（克隆后一次性执行）：git config core.hooksPath .githooks
+
+node scripts/sync-shared.mjs --check >/dev/null 2>&1 && exit 0
+
+echo "pre-commit: 共享模块副本与 shared/ 源码不一致，自动同步中…"
+node scripts/sync-shared.mjs || exit 1
+
+for copy in skills/*/scripts/tongid-auth.mjs; do
+  [ -e "$copy" ] && git add -- "$copy"
+done
+echo "pre-commit: 同步后的副本已加入本次提交。"
