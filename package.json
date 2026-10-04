@@ -2,9 +2,9 @@
   "name": "tongid-skills",
   "version": "0.1.0",
   "private": true,
-  "description": "Source repository for TongID Agent skills",
+  "description": "TongID Agent skill: tongid-board（单技能仓库，SKILL.md 位于根目录）",
   "scripts": {
-    "test": "node --test skills/tongid-board/scripts/tongid-board.test.mjs skills/tongid-board/skill-contract.test.mjs"
+    "test": "node --test scripts/tongid-board.test.mjs skill-contract.test.mjs"
   },
   "engines": {
     "node": ">=20"
