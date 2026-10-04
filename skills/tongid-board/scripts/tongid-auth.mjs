@@ -23,7 +23,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const DEFAULT_BASE_URL = 'https://tongid.dev';
-export const TONGID_AGENT_CALLBACK_URL = 'http://127.0.0.1:43173/tongid-agent/callback';
+export const TONGID_AGENT_CALLBACK_URL = 'http://127.0.0.1:43173/tongid-skills/callback';
 export const TONGID_AGENT_CLIENT_TYPE = 'tongid-local-agent';
 
 function fail(message) {
@@ -82,7 +82,7 @@ export function parseAgentCallback(callbackUrl, expectedState) {
     url.protocol !== 'http:' ||
     url.hostname !== '127.0.0.1' ||
     url.port !== '43173' ||
-    url.pathname !== '/tongid-agent/callback'
+    url.pathname !== '/tongid-skills/callback'
   ) {
     fail('回调未使用固定回调地址');
   }
@@ -148,9 +148,66 @@ export async function removeSession(homeDir = os.homedir()) {
   await rm(sessionFile(homeDir), { force: true });
 }
 
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function writeCallbackResponse(response, status, title, message) {
+  const success = status === 200;
+  const icon = success
+    ? '<svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="28" cy="28" r="26" stroke="#22c55e" stroke-width="3"/><path d="M17.5 29l7.5 7.5L38.5 20" stroke="#22c55e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    : '<svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="28" cy="28" r="26" stroke="#ef4444" stroke-width="3"/><path d="M19 19l18 18M37 19L19 37" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/></svg>';
   response.writeHead(status, { 'content-type': 'text/html; charset=utf-8' });
-  response.end(`<!doctype html><title>${title}</title><p>${message}</p>`);
+  response.end(`<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(title)}</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f4f5f7;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    padding: 44px 36px 40px;
+    text-align: center;
+  }
+  h1 { font-size: 19px; font-weight: 600; color: #17181c; margin-top: 20px; }
+  p { font-size: 14px; line-height: 1.7; color: #7a7f89; margin-top: 10px; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #131417; }
+    .card { background: #1d1e23; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35); }
+    h1 { color: #f2f3f5; }
+    p { color: #9aa0aa; }
+  }
+</style>
+</head>
+<body>
+<main class="card">
+  ${icon}
+  <h1>${escapeHtml(title)}</h1>
+  <p>${escapeHtml(message)}</p>
+</main>
+</body>
+</html>
+`);
 }
 
 /**
@@ -166,10 +223,20 @@ export function waitForAgentCallback({ state, timeoutMs = 5 * 60_000, onListenin
       const callbackUrl = new URL(request.url ?? '/', `http://${host}`).toString();
       try {
         const result = parseAgentCallback(callbackUrl, state);
-        writeCallbackResponse(response, 200, 'TongID 登录完成', '可以关闭此页面并回到终端。');
+        writeCallbackResponse(
+          response,
+          200,
+          'TongID 登录成功',
+          'TongID 授权已完成，本机会自动完成后续登录步骤。现在可以关闭此窗口，回到终端继续操作。',
+        );
         finish(null, result);
       } catch (error) {
-        writeCallbackResponse(response, 400, 'TongID 登录失败', '回调校验失败，请回到终端查看错误。');
+        writeCallbackResponse(
+          response,
+          400,
+          'TongID 登录失败',
+          '回调校验未通过，请回到终端查看具体错误后重试。',
+        );
         finish(error);
       }
     });

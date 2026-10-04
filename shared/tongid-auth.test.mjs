@@ -26,7 +26,7 @@ test('builds a fixed Agent authorization callback URL', () => {
   assert.equal(url.pathname, '/auth/login');
   assert.equal(
     url.searchParams.get('redirect'),
-    'http://127.0.0.1:43173/tongid-agent/callback',
+    'http://127.0.0.1:43173/tongid-skills/callback',
   );
   assert.equal(url.searchParams.get('state'), 'state_1');
   assert.equal(url.searchParams.get('code_challenge'), 'challenge_1');
@@ -53,11 +53,11 @@ test('maps 401 and 403 to the unified remediation hints', () => {
 
 test('rejects a callback that does not use the exact loopback host and path', () => {
   assert.throws(
-    () => parseAgentCallback('http://localhost:43173/tongid-agent/callback?code=x&state=state_1', 'state_1'),
+    () => parseAgentCallback('http://localhost:43173/tongid-skills/callback?code=x&state=state_1', 'state_1'),
     /固定回调地址/,
   );
   assert.throws(
-    () => parseAgentCallback('http://127.0.0.1:43173/tongid-agent/callback?code=x&state=wrong', 'state_1'),
+    () => parseAgentCallback('http://127.0.0.1:43173/tongid-skills/callback?code=x&state=wrong', 'state_1'),
     /state/,
   );
 });

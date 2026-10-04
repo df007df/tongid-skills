@@ -13,7 +13,7 @@ The local Agent uses a TongID Bearer session, never an application credential. E
 
 1. Check the session first: `node scripts/tongid-auth.mjs whoami`. It prints the saved base URL and login time; on failure, log in.
 2. Log in: `node scripts/tongid-auth.mjs login [--base-url URL]` (default `https://tongid.dev`; pass `http://localhost:3000` only for local development) and finish the browser login.
-3. The helper listens only on `http://127.0.0.1:43173/tongid-agent/callback`; no application redirect-URI whitelist is required. It verifies state and PKCE before exchanging the code, then saves the session atomically (directory mode `0700`, file mode `0600`).
+3. The helper listens only on `http://127.0.0.1:43173/tongid-skills/callback`; no application redirect-URI whitelist is required. It verifies state and PKCE before exchanging the code, then saves the session atomically (directory mode `0700`, file mode `0600`).
 4. Every board command takes an explicit `--application-id app_xxx` for the target application. Application data is isolated per application; the skill never reads environment variables.
 
 本机 Agent 不使用 Secret Key。`Authorization: Bearer <session-token>` 与 `x-tongid-application-id` 由 helper 自动发送；不要把 token 输出到聊天、源码或日志中。
