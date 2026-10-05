@@ -161,7 +161,9 @@ function writeCallbackResponse(response, status, title, message) {
   const icon = success
     ? '<svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="28" cy="28" r="26" stroke="#22c55e" stroke-width="3"/><path d="M17.5 29l7.5 7.5L38.5 20" stroke="#22c55e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     : '<svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="28" cy="28" r="26" stroke="#ef4444" stroke-width="3"/><path d="M19 19l18 18M37 19L19 37" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/></svg>';
-  response.writeHead(status, { 'content-type': 'text/html; charset=utf-8' });
+  // Connection: close 让浏览器收到响应后主动断开 keep-alive 连接——
+  // 否则 finish() 里 server.close 的回调要等它闲置关闭，兑换迟迟不开始
+  response.writeHead(status, { 'content-type': 'text/html; charset=utf-8', connection: 'close' });
   response.end(`<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -250,14 +252,19 @@ export function waitForAgentCallback({ state, timeoutMs = 5 * 60_000, onListenin
         else resolve(value);
       };
 
-      // listen() can fail before the server is actually listening (notably
-      // EADDRINUSE). Calling close() in that state raises a second
-      // ERR_SERVER_NOT_RUNNING and obscures the useful port-conflict error.
-      if (!server.listening) {
-        settle();
-        return;
-      }
-      server.close(settle);
+  // listen() can fail before the server is actually listening (notably
+  // EADDRINUSE). Calling close() in that state raises a second
+  // ERR_SERVER_NOT_RUNNING and obscures the useful port-conflict error.
+  if (!server.listening) {
+    settle();
+    return;
+  }
+  // 回跳响应虽已标记 Connection: close，仍兜底强断残留 keep-alive 连接：
+  // server.close 的回调要等所有连接结束，浏览器若不按标记断开，
+  // promise 永不 resolve、兑换不会开始，授权码会先过期（2026-10-05 线上实测）。
+  server.close(settle);
+  const janitor = setTimeout(() => server.closeAllConnections(), 100);
+  janitor.unref();
     }
 
     server.once('error', (error) => {
